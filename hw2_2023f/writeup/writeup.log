@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.9.10)  25 SEP 2023 21:22
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.9.10)  25 SEP 2023 17:00
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**Homework2_Questions.tex
-(./Homework2_Questions.tex
+**writeup.tex
+(./writeup.tex
 LaTeX2e <2022-11-01> patch level 1
 L3 programming layer <2023-02-22>
 (/usr/local/texlive/2023/texmf-dist/tex/latex/base/article.cls
@@ -319,6 +319,26 @@ File: microtype.cfg 2023/03/13 v3.1a microtype main configuration file (RS)
 (/usr/local/texlive/2023/texmf-dist/tex/latex/psnfss/times.sty
 Package: times 2020/03/25 PSNFSS-v9.3 (SPQR) 
 )
+(/usr/local/texlive/2023/texmf-dist/tex/latex/booktabs/booktabs.sty
+Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
+\heavyrulewidth=\dimen159
+\lightrulewidth=\dimen160
+\cmidrulewidth=\dimen161
+\belowrulesep=\dimen162
+\belowbottomsep=\dimen163
+\aboverulesep=\dimen164
+\abovetopsep=\dimen165
+\cmidrulesep=\dimen166
+\cmidrulekern=\dimen167
+\defaultaddspace=\dimen168
+\@cmidla=\count285
+\@cmidlb=\count286
+\@aboverulesep=\dimen169
+\@belowrulesep=\dimen170
+\@thisruleclass=\count287
+\@lastruleclass=\count288
+\@thisrulewidth=\dimen171
+)
 (/usr/local/texlive/2023/texmf-dist/tex/latex/matlab-prettifier/matlab-prettifi
 er.sty
 Package: matlab-prettifier 2014/06/19 v0.3 A package for prettyprinting Matlab 
@@ -346,75 +366,72 @@ Package xcolor Info: Model `Gray' substituted by `gray' on input line 1375.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1376.
 )
 (/usr/local/texlive/2023/texmf-dist/tex/latex/listings/listings.sty
-\lst@mode=\count285
+\lst@mode=\count289
 \lst@gtempboxa=\box58
 \lst@token=\toks22
-\lst@length=\count286
-\lst@currlwidth=\dimen159
-\lst@column=\count287
-\lst@pos=\count288
-\lst@lostspace=\dimen160
-\lst@width=\dimen161
-\lst@newlines=\count289
-\lst@lineno=\count290
-\lst@maxwidth=\dimen162
+\lst@length=\count290
+\lst@currlwidth=\dimen172
+\lst@column=\count291
+\lst@pos=\count292
+\lst@lostspace=\dimen173
+\lst@width=\dimen174
+\lst@newlines=\count293
+\lst@lineno=\count294
+\lst@maxwidth=\dimen175
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2023/02/27 1.9 (Carsten Heinz)
-\c@lstnumber=\count291
-\lst@skipnumbers=\count292
+\c@lstnumber=\count295
+\lst@skipnumbers=\count296
 \lst@framebox=\box59
 )
 (/usr/local/texlive/2023/texmf-dist/tex/latex/listings/listings.cfg
 File: listings.cfg 2023/02/27 1.9 listings configuration
 ))
 Package: listings 2023/02/27 1.9 (Carsten Heinz)
-\netBracketCount@mlpr=\count293
-\blkLvl@mlpr=\count294
-\blkLvlAtClassdef@mlpr=\count295
+\netBracketCount@mlpr=\count297
+\blkLvl@mlpr=\count298
+\blkLvlAtClassdef@mlpr=\count299
 \emHeight@mlpr=\skip68
 \jayDepth@mlpr=\skip69
 \sectionRuleOffset@mlpr=\skip70
 \toks@mlpr=\toks23
 )
 LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 8
-0.
+1.
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
 (/usr/local/texlive/2023/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2023-01-16 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count296
+\l__color_backend_stack_int=\count300
 \l__pdf_internal_box=\box60
 )
-(./Homework2_Questions.aux)
-\openout1 = `Homework2_Questions.aux'.
+No file writeup.aux.
+\openout1 = `writeup.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-Package hyperref Info: Link coloring ON on input line 80.
- (./Homework2_Questions.out)
-(./Homework2_Questions.out)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 81.
+LaTeX Font Info:    ... okay on input line 81.
+Package hyperref Info: Link coloring ON on input line 81.
 \@outlinefile=\write3
-\openout3 = `Homework2_Questions.out'.
-
+\openout3 = `writeup.out'.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -452,16 +469,16 @@ Package hyperref Info: Link coloring ON on input line 80.
 
 (/usr/local/texlive/2023/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count297
-\scratchdimen=\dimen163
+\scratchcounter=\count301
+\scratchdimen=\dimen176
 \scratchbox=\box61
-\nofMPsegments=\count298
-\nofMParguments=\count299
+\nofMPsegments=\count302
+\nofMParguments=\count303
 \everyMPshowfont=\toks24
-\MPscratchCnt=\count300
-\MPscratchDim=\dimen164
-\MPnumerator=\count301
-\makeMPintoPDFobject=\count302
+\MPscratchCnt=\count304
+\MPscratchDim=\dimen177
+\MPnumerator=\count305
+\makeMPintoPDFobject=\count306
 \everyMPtoPDFconversion=\toks25
 ) (/usr/local/texlive/2023/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
@@ -472,19 +489,19 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-LaTeX Info: Redefining \microtypecontext on input line 80.
-Package microtype Info: Applying patch `item' on input line 80.
-Package microtype Info: Applying patch `toc' on input line 80.
-Package microtype Info: Applying patch `eqnum' on input line 80.
-Package microtype Info: Applying patch `footnote' on input line 80.
-Package microtype Info: Applying patch `verbatim' on input line 80.
+LaTeX Info: Redefining \microtypecontext on input line 81.
+Package microtype Info: Applying patch `item' on input line 81.
+Package microtype Info: Applying patch `toc' on input line 81.
+Package microtype Info: Applying patch `eqnum' on input line 81.
+Package microtype Info: Applying patch `footnote' on input line 81.
+Package microtype Info: Applying patch `verbatim' on input line 81.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 80.
+LaTeX Info: Redefining \showhyphens on input line 81.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -492,107 +509,108 @@ Package microtype Info: No adjustment of character kerning.
 (/usr/local/texlive/2023/texmf-dist/tex/latex/microtype/mt-ptm.cfg
 File: mt-ptm.cfg 2006/04/20 v1.7 microtype config. file: Times (RS)
 )
-\c@lstlisting=\count303
+\c@lstlisting=\count307
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/microtype/mt-cmr.cfg
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman 
 (RS)
 )
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 82.
+(Font)              <12> on input line 83.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 82.
+(Font)              <8> on input line 83.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 82.
+(Font)              <6> on input line 83.
 
 
 LaTeX Warning: No \author given.
 
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 8
-7.
+8.
 (/usr/local/texlive/2023/texmf-dist/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-) [1{/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr
-/local/texlive/2023/texmf-dist/fonts/enc/dvips/base/8r.enc}
+)
+
+LaTeX Warning: Reference `eq:one' on page 1 undefined on input line 97.
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <10.95> on input line 99.
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 1
+09.
+(/usr/local/texlive/2023/texmf-dist/tex/latex/psnfss/ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+)
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `pcr' (encoding: OT1).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+LaTeX Font Info:    Trying to load font information for TS1+pcr on input line 1
+13.
+
+(/usr/local/texlive/2023/texmf-dist/tex/latex/psnfss/ts1pcr.fd
+File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
+)
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `pcr' (encoding: TS1).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+
+
+LaTeX Warning: Reference `fig:result1' on page 1 undefined on input line 121.
+
+[1{/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/l
+ocal/texlive/2023/texmf-dist/fonts/enc/dvips/base/8r.enc}
 
 ]
-(/usr/local/texlive/2023/texmf-dist/tex/latex/listings/lstlang1.sty
-File: lstlang1.sty 2023/02/27 1.9 listings language file
-)
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <10.95> on input line 153.
- [2]
-</Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/input_image
-.jpg, id=35, 288.07625pt x 253.94875pt>
-File: /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/input_
-image.jpg Graphic file (type jpg)
-<use /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/input_i
-mage.jpg>
-Package pdftex.def Info: /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/l
-owhighresult/input_image.jpg  used on input line 202.
-(pdftex.def)             Requested size: 113.81102pt x 100.32996pt.
-</Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/low_pass_im
-age.jpg, id=36, 288.07625pt x 253.94875pt>
-File: /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/low_pa
-ss_image.jpg Graphic file (type jpg)
-<use /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/low_pas
-s_image.jpg>
-Package pdftex.def Info: /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/l
-owhighresult/low_pass_image.jpg  used on input line 203.
-(pdftex.def)             Requested size: 113.81102pt x 100.32996pt.
-</Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/high_pass_i
-mage.jpg, id=37, 288.07625pt x 253.94875pt>
-File: /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/high_p
-ass_image.jpg Graphic file (type jpg)
-<use /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/high_pa
-ss_image.jpg>
-Package pdftex.def Info: /Users/treblocami/Desktop/job/cs484/hw2_2023f/result/l
-owhighresult/high_pass_image.jpg  used on input line 204.
-(pdftex.def)             Requested size: 113.81102pt x 100.32996pt.
 
-[3 </Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/input_im
-age.jpg> </Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhighresult/lo
-w_pass_image.jpg> </Users/treblocami/Desktop/job/cs484/hw2_2023f/result/lowhigh
-result/high_pass_image.jpg>]
-</Users/treblocami/Desktop/job/cs484/hw2_2023f/questions/graph6.png, id=56, 352
-.31625pt x 321.45094pt>
-File: /Users/treblocami/Desktop/job/cs484/hw2_2023f/questions/graph6.png Graphi
-c file (type png)
-<use /Users/treblocami/Desktop/job/cs484/hw2_2023f/questions/graph6.png>
-Package pdftex.def Info: /Users/treblocami/Desktop/job/cs484/hw2_2023f/question
-s/graph6.png  used on input line 232.
-(pdftex.def)             Requested size: 170.71652pt x 155.76126pt.
-</Users/treblocami/Desktop/job/cs484/hw2_2023f/questions/graph7.png, id=58, 414
-.04688pt x 325.96782pt>
-File: /Users/treblocami/Desktop/job/cs484/hw2_2023f/questions/graph7.png Graphi
-c file (type png)
-<use /Users/treblocami/Desktop/job/cs484/hw2_2023f/questions/graph7.png>
-Package pdftex.def Info: /Users/treblocami/Desktop/job/cs484/hw2_2023f/question
-s/graph7.png  used on input line 233.
-(pdftex.def)             Requested size: 199.16928pt x 156.80595pt.
- [4 </Users/treblocami/Desktop/job/cs484/hw2_2023f/questions/graph6.png> </User
-s/treblocami/Desktop/job/cs484/hw2_2023f/questions/graph7.png>] (./Homework2_Qu
-estions.aux)
-Package rerunfilecheck Info: File `Homework2_Questions.out' has not changed.
-(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
+LaTeX Warning: Reference `fig:result1' on page 2 undefined on input line 122.
+
+<placeholder.jpg, id=24, 250.9375pt x 250.9375pt>
+File: placeholder.jpg Graphic file (type jpg)
+<use placeholder.jpg>
+Package pdftex.def Info: placeholder.jpg  used on input line 127.
+(pdftex.def)             Requested size: 142.26378pt x 142.27005pt.
+File: placeholder.jpg Graphic file (type jpg)
+<use placeholder.jpg>
+Package pdftex.def Info: placeholder.jpg  used on input line 128.
+(pdftex.def)             Requested size: 142.26378pt x 142.27005pt.
+
+LaTeX Warning: Reference `tab:table1' on page 2 undefined on input line 133.
+
+[2 <./placeholder.jpg>] (./writeup.aux)
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package rerunfilecheck Warning: File `writeup.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `writeup.out':
+(rerunfilecheck)             Before: <no file>
+(rerunfilecheck)             After:  D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 15136 strings out of 476025
- 241285 string characters out of 5790017
- 1864388 words of memory out of 5000000
- 35246 multiletter control sequences out of 15000+600000
- 527701 words of font info for 124 fonts, out of 8000000 for 9000
+ 15103 strings out of 476025
+ 239683 string characters out of 5790017
+ 1905388 words of memory out of 5000000
+ 35289 multiletter control sequences out of 15000+600000
+ 527976 words of font info for 89 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,11n,76p,1016b,1190s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,11n,76p,1004b,1569s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb
 ></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><
-/usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></
-usr/local/texlive/2023/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/
-texlive/2023/texmf-dist/fonts/type1/urw/times/utmr8a.pfb>
-Output written on Homework2_Questions.pdf (4 pages, 269234 bytes).
+/usr/local/texlive/2023/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/loc
+al/texlive/2023/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive
+/2023/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2023/texm
+f-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on writeup.pdf (2 pages, 76899 bytes).
 PDF statistics:
- 104 PDF objects out of 1000 (max. 8388607)
- 80 compressed objects within 1 object stream
- 37 named destinations out of 1000 (max. 500000)
- 24602 words of extra memory for PDF output out of 24883 (max. 10000000)
+ 69 PDF objects out of 1000 (max. 8388607)
+ 51 compressed objects within 1 object stream
+ 19 named destinations out of 1000 (max. 500000)
+ 29702 words of extra memory for PDF output out of 29859 (max. 10000000)
 

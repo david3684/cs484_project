@@ -3,6 +3,7 @@ import numpy as np
 import time
 import os
 from my_filter2D import my_filter2D
+from my_filter2D_fft import my_filter2D_fft
 
 
 def hw2_testcase():
@@ -14,11 +15,11 @@ def hw2_testcase():
     # Revised by Dahyun Kang and originally written by James Hays.
 
     ## Setup
-    test_image = cv2.imread('/Users/treblocami/Downloads/hw2_2023f/data/cat.bmp', -1) / 255.0
+    test_image = cv2.imread('/Users/treblocami/Desktop/job/cs484/hw2_2023f/data/cat.bmp', -1) / 255.0
     test_image = cv2.resize(test_image, dsize=None, fx=0.7, fy=0.7, )
     #image_height, image_width, channel = test_image.shape
     #print(image_height, image_width, channel)
-    result_dir = '/Users/treblocami/Downloads/hw2_2023f/result/test'
+    result_dir = '/Users/treblocami/Desktop/job/cs484/hw2_2023f/result/test'
     os.makedirs(result_dir, exist_ok=True)
 
     cv2.imshow('test_image', test_image)

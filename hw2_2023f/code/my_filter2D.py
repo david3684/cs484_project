@@ -39,30 +39,27 @@ def my_filter2D(image, kernel):
 
     padding_width = kernel_width//2
     padding_height = kernel_height//2
-    pad_value = 0
     
     print(image.shape)
     if(image.ndim == 2): #grayscale image
         input_height, input_width = image.shape
-        padded_image = np.pad(image, ((padding_height, padding_height),(padding_width, padding_width)), mode='constant', constant_values=pad_value)
+        padded_image = cv2.copyMakeBorder(image, padding_height, padding_height, padding_width, padding_width, borderType=cv2.BORDER_REFLECT_101)
     else: #color image
         input_height, input_width, channel = image.shape
-        padded_image = np.pad(image, ((padding_height, padding_height), (padding_width, padding_width), (0, 0)), mode='constant', constant_values=pad_value)
+        padded_image = cv2.copyMakeBorder(image, padding_height, padding_height, padding_width, padding_width, borderType=cv2.BORDER_REFLECT_101)
     
-    print(padded_image.shape)
+    padded_kernel = cv2.copyMakeBorder(image, padding_height, padding_height, padding_width, padding_width, borderType=cv2.BORDER_REFLECT_101)
     output = np.zeros_like(image)
-    #print("channel:%d",image.shape[-1])
+    
+
+    print(padded_image.shape)
+    
+    kernelflipped = np.flipud(np.fliplr(kernel))
     for k in range(channel):
         for i in range(input_height):
             for j in range(input_width):
-                value = 0
-                for m in range(kernel_height):
-                    for n in range(kernel_width):
-                        
-                        #if i-m>=0 and j-n>=0 and i-m < input_height and j-n < input_width:
-                        value += padded_image[i+m, j+n, k] * kernel[m,n]
-                output[i,j,k] = value
-                print(i,j)
+                patch = padded_image[i:i + kernel_height, j:j + kernel_width, k]
+                output[i,j,k] = np.sum(patch*kernelflipped)
     print(image.size)
     print(output.size)
     return output
