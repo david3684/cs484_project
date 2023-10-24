@@ -39,12 +39,12 @@ VISUALIZE = False
 
 
 class HW3Stereo:
-    result_dir = '../result'
+    result_dir = '/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result'
     os.makedirs(result_dir, exist_ok=True)
 
     #=======================================================================================
     # Read bayer pattern image
-    data_dir = '../data'
+    data_dir = '/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/data'
     img1_bayer = cv2.imread(f'{data_dir}/img1_bayer.png', -1)
     img2_bayer = cv2.imread(f'{data_dir}/img2_bayer.png', -1)
 
