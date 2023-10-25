@@ -39,14 +39,14 @@ VISUALIZE = False
 
 
 class HW3Stereo:
-    #result_dir = 'C:/Users/David Lee/Desktop/cs484_project/hw3_2023f/result'
-    result_dir = '/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result'
+    result_dir = 'C:/Users/David Lee/Desktop/cs484_project/hw3_2023f/result'
+    #result_dir = '/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result'
     os.makedirs(result_dir, exist_ok=True)
 
     #=======================================================================================
     # Read bayer pattern image
-    #data_dir='C:/Users/David Lee/Desktop/cs484_project/hw3_2023f/data'
-    data_dir = '/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/data'
+    data_dir='C:/Users/David Lee/Desktop/cs484_project/hw3_2023f/data'
+    #data_dir = '/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/data'
     img1_bayer = cv2.imread(f'{data_dir}/img1_bayer.png', -1)
     img2_bayer = cv2.imread(f'{data_dir}/img2_bayer.png', -1)
 
@@ -54,7 +54,6 @@ class HW3Stereo:
     points = np.loadtxt(f'{data_dir}/feature_points.txt', dtype=np.float32, delimiter=',')
     pts1 = points[:,:2]
     pts2 = points[:,2:]
-
     # img3 (left) and 4 (right) are perfectly rectified image
     img3 = cv2.imread(f'{data_dir}/img3.png', -1)
     img4 = cv2.imread(f'{data_dir}/img4.png', -1)

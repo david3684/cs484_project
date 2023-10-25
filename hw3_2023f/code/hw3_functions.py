@@ -97,12 +97,9 @@ def calculate_fundamental_matrix(pts1, pts2):
     
     n = pts1.shape[0]
     
-    # Convert points to homogeneous coordinates
-    pts1_homogeneous = np.column_stack([pts1, np.ones(n)])
-    pts2_homogeneous = np.column_stack([pts2, np.ones(n)])
-
-    pts1_normalized, T1 = normalize_points(pts1_homogeneous.T, 2)
-    pts2_normalized, T2 = normalize_points(pts2_homogeneous.T, 2)
+    
+    pts1_normalized, T1 = normalize_points(pts1.T, 2)
+    pts2_normalized, T2 = normalize_points(pts2.T, 2)
     
     # Transpose back to original structure
     pts1_normalized = pts1_normalized.T
@@ -110,12 +107,13 @@ def calculate_fundamental_matrix(pts1, pts2):
     
     A = np.zeros((n, 9))
     for i in range(n):
-        x1, y1, _ = pts1_normalized[i]
-        x2, y2, _ = pts2_normalized[i]
+        x1, y1 = pts1_normalized[i]
+        x2, y2 = pts2_normalized[i]
         A[i] = [x1*x2, x2*y1, x2, y2*x1, y1*y2, y2, x1, y1, 1]
     
     U, S, Vt = np.linalg.svd(A)
     f = Vt[-1]
+    print(Vt, Vt[-1])
     F = f.reshape(3, 3)
     
     U, S, Vt = np.linalg.svd(F)
@@ -192,8 +190,6 @@ def calculate_disparity_map(img1, img2):
     # i.e., I1(u) = I2(u + d(u)),
     # where u is pixel positions (x,y) in each images and d is dispairty map.
     # Your code here
-    window_size=20
-    d_max=DISPARITY_RANGE
     
     
     h, w = img1_gray.shape
@@ -201,14 +197,11 @@ def calculate_disparity_map(img1, img2):
     
     # Initialize disparity map and cost volume
     disparity_map = np.zeros((h, w), dtype=np.float32)
-    cost_volume = np.zeros((h, w, d_max), dtype=np.float32)  
+    cost_volume = np.zeros((h, w, DISPARITY_RANGE), dtype=np.float32)  
 
-    cost_volume = np.zeros((h, w,d_max), dtype=np.float32)
-
-    for d in range(d_max):
+    for d in range(DISPARITY_RANGE):
         print(f"Calculating disparity {d}")
 
-        # Efficiently roll the image
         img2_shifted = np.roll(img2_gray, d, axis=1)
 
         for y in range(half_window, h - half_window):
@@ -222,31 +215,32 @@ def calculate_disparity_map(img1, img2):
             numerator = np.sum((w1 - mean_w1) * (w2 - mean_w2), axis=0)
             denominator = np.sqrt(np.sum((w1 - mean_w1)**2, axis=0) * np.sum((w2 - mean_w2)**2, axis=0))
 
-            ncc = np.where(denominator == 0, -1, numerator / denominator)
+            ncc = -1 if denominator == 0 else numerator / denominator
             cost_volume[y, half_window:w - half_window, d] = -ncc
 
     # Aggregate costs
-    # Assuming img1 is the reference image
     radius = 40
     epsilon = 0.2**2  # Epsilon in the Guided Filter
     gf = cv2.ximgproc.createGuidedFilter(img1_gray, radius, epsilon)
 
-    # Apply the Guided Filter to each disparity slice of the cost volume
-    for d in range(d_max):
+    for d in range(DISPARITY_RANGE):
         cost_volume[:, :, d] = gf.filter(cost_volume[:, :, d])
 
-    # Select disparity with minimum cost
     
     # Get disparity map
     disparity_map = -np.argmin(cost_volume, axis=2)
+
     
+    #Sub-Pixel Disparity
     epsilon = 1e-5  # Smoothing term to prevent division by zero
     max_subpixel_correction = 0.5
 
+
+    
     for y in range(h):
         for x in range(w):
             d = disparity_map[y, x]
-            if d == 0 or d == d_max - 1:
+            if d == 0 or d == DISPARITY_RANGE - 1:
                 continue
             C0 = cost_volume[y, x, d-1]
             C1 = cost_volume[y, x, d]

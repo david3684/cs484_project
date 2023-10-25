@@ -186,8 +186,8 @@ These are two images obatained from bilinear interpolation.
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.5cm]{/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result/bilinear_img1.png}
-    \includegraphics[width=5.5cm]{/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result/bilinear_img2.png}
+    \includegraphics[width=5.5cm]{../result/bilinear_img1.png}
+    \includegraphics[width=5.5cm]{../result/bilinear_img2.png}
 \caption{Images obtained from bilienear interpolation}
 \end{figure}
 
@@ -204,35 +204,18 @@ def calculate_fundamental_matrix(pts1, pts2):
     
     n = pts1.shape[0]
     
-    # Normalization
-    mean1 = np.mean(pts1, axis=0)
-    mean2 = np.mean(pts2, axis=0)
     
-    scale1 = np.sqrt(2) / np.std(pts1)
-    scale2 = np.sqrt(2) / np.std(pts2)
+    pts1_normalized, T1 = normalize_points(pts1.T, 2)
+    pts2_normalized, T2 = normalize_points(pts2.T, 2)
     
-    T1 = np.array([
-        [scale1, 0, -scale1 * mean1[0]],
-        [0, scale1, -scale1 * mean1[1]],
-        [0, 0, 1]
-    ])
-    
-    T2 = np.array([
-        [scale2, 0, -scale2 * mean2[0]],
-        [0, scale2, -scale2 * mean2[1]],
-        [0, 0, 1]
-    ])
-    
-    pts1 = np.column_stack([pts1, np.ones(n)])
-    pts2 = np.column_stack([pts2, np.ones(n)])
-
-    pts1_normalized = (T1 @ pts1.T).T
-    pts2_normalized = (T2 @ pts2.T).T
+    # Transpose back to original structure
+    pts1_normalized = pts1_normalized.T
+    pts2_normalized = pts2_normalized.T
     
     A = np.zeros((n, 9))
     for i in range(n):
-        x1, y1, _ = pts1_normalized[i]
-        x2, y2, _ = pts2_normalized[i]
+        x1, y1 = pts1_normalized[i]
+        x2, y2 = pts2_normalized[i]
         A[i] = [x1*x2, x2*y1, x2, y2*x1, y1*y2, y2, x1, y1, 1]
     
     U, S, Vt = np.linalg.svd(A)
@@ -247,35 +230,110 @@ def calculate_fundamental_matrix(pts1, pts2):
     F = T2.T @ F @ T1
     
     return F
-
-def transform_fundamental_matrix(F, h1, h2):
-    
-    F_mod = np.linalg.inv(h2).T @ F @ np.linalg.inv(h1)
-    
-    return F_mod
 \end{lstlisting}
 \begin{enumerate}
-    \item \textbf{Normalization:}
-    First I normalized the given points using the built-in fuction $normalize\_points()$. 
+    \item \textbf{Normalization}
+    First, I normalized the given points using the built-in fuction $normalize\_points()$. Since the function needs input coordinates with x,y in column, I transposed the given points vector and applied the function.
+    Then I transposed the result of function to obtain original structure.
     
-    \item \textbf{Constructing Matrix A:}
-    A matrix $A$ is constructed using the normalized points. Each row of $A$ is constructed as $[x_1'x_2, x_1'y_2, x_1', y_1'x_2, y_1'y_2, y_1', x_2, y_2, 1]$.
+    \item \textbf{Constructing Matrix A}
+    Matrix $A$ is constructed using the normalized points. I just simply put each values in the matrix, and the values come from what we learned in class and supplementary slides.
     
-    \item \textbf{Singular Value Decomposition:}
-    SVD is performed on matrix $A$ to find the Fundamental Matrix $F$.
+    \item \textbf{Singular Value Decomposition and Reshaping f}
+    Performed singular value decomposition for matrix $A$, to obtain $f$.Since $f$ corresponds to the eigenvector of $A^TA$ with the smallest eigenvalue, I extracted the last row of $Vt$. Then, reshaped it into 3x3 matrix. Matrix $F$ is 3x3 fundmental matrix obtained from SVD.
     
-    \item \textbf{Constraining $F$:}
-    As $F$ is only determined up to a scale, and should have rank 2, the smallest singular value is set to zero to enforce this property.
+    \item \textbf{Enforce F to have Rank 2, and Recalculate F}
+    Performed singular value decomposition again for matrix $F$. To enforce rank 2 condition, I set the last row of S(minimum sigular value) zero and recalculated $F$ with new S.
     
-    \item \textbf{Denormalization:}
-    Finally, the Fundamental Matrix $F$ is denormalized to bring it back to the scale of the original points.
+    \item \textbf{Denormalization}
+    Finally, I denormalized fundamental matrix $F$ with scaling matrix $T1$ and $T2$ to bring it back to the scale of the original points.
 \end{enumerate}
 
+\section*{Stereo Rectification}
+
+\section*{Calculating Disparity Map}
+The final, and the most complex part of this project is cacluating the disparity map.
+\begin{lstlisting}[language=python]
+def calculate_disparity_map(img1, img2):
+    
+    # First convert color image to grayscale
+    img1_gray = cv2.cvtColor(img1, cv2.COLOR_RGB2GRAY)
+    img2_gray = cv2.cvtColor(img2, cv2.COLOR_RGB2GRAY)
+    # You have to get disparity (depth) of img1 (left)
+    # i.e., I1(u) = I2(u + d(u)),
+    # where u is pixel positions (x,y) in each images and d is dispairty map.
+    # Your code here
+    
+    
+    h, w = img1_gray.shape
+    half_window = WINDOW_SIZE // 2
+    
+    # Initialize disparity map and cost volume
+    disparity_map = np.zeros((h, w), dtype=np.float32)
+    cost_volume = np.zeros((h, w, DISPARITY_RANGE), dtype=np.float32)  
+
+    for d in range(DISPARITY_RANGE):
+        print(f"Calculating disparity {d}")
+
+        img2_shifted = np.roll(img2_gray, d, axis=1)
+
+        for y in range(half_window, h - half_window):
+            # Vectorized inner loop
+            w1 = img1_gray[y - half_window:y + half_window + 1, half_window:w - half_window]
+            w2 = img2_shifted[y - half_window:y + half_window + 1, half_window:w - half_window]
+            
+            mean_w1 = np.mean(w1, axis=0)
+            mean_w2 = np.mean(w2, axis=0)
+            
+            numerator = np.sum((w1 - mean_w1) * (w2 - mean_w2), axis=0)
+            denominator = np.sqrt(np.sum((w1 - mean_w1)**2, axis=0) * np.sum((w2 - mean_w2)**2, axis=0))
+
+            ncc = -1 if denominator == 0 else numerator / denominator
+            cost_volume[y, half_window:w - half_window, d] = -ncc
+
+    # Aggregate costs
+    radius = 40
+    epsilon = 0.2**2  # Epsilon in the Guided Filter
+    gf = cv2.ximgproc.createGuidedFilter(img1_gray, radius, epsilon)
+
+    for d in range(DISPARITY_RANGE):
+        cost_volume[:, :, d] = gf.filter(cost_volume[:, :, d])
+    
+    # Get disparity map
+    disparity_map = -np.argmin(cost_volume, axis=2)
+    return disparity_map
+\end{lstlisting}
+
 \begin{enumerate}
-    \item Result 1 was a total failure, because...
-    \item Result 2 (Figure~\ref{fig:result1}, left) was surprising, because...
-    \item Result 3 (Figure~\ref{fig:result1}, right) blew my socks off, because...
+    \item 
 \end{enumerate}
+
+There are some points that I considered to make this code.
+\begin{lstlisting}[language=python]
+    for d in range(DISPARITY_RANGE):
+        print(f"Calculating disparity {d}")
+
+        img2_shifted = np.roll(img2_gray, d, axis=1)
+
+        for y in range(half_window, h - half_window):
+            for x in range(half_window, w - half_window):
+                # Extract square windows
+                w1 = img1_gray[y - half_window:y + half_window + 1, x - half_window:x + half_window + 1]
+                w2 = img2_shifted[y - half_window:y + half_window + 1, x - half_window:x + half_window + 1]
+                
+                mean_w1 = np.mean(w1)
+                mean_w2 = np.mean(w2)
+                
+                numerator = np.sum((w1 - mean_w1) * (w2 - mean_w2))
+                denominator = np.sqrt(np.sum((w1 - mean_w1)**2) * np.sum((w2 - mean_w2)**2))
+
+                ncc = -1 if denominator == 0 else numerator / denominator
+                cost_volume[y, x, d] = -ncc
+\end{lstlisting}
+
+This was the original for loop that I made. However, three loops together made a lot of computational time; so I had to reduce the number of loops.
+In original approach, I calculated NCC with two boxes in each images, so I had to traverse two loops for x and y coordinates. To get rid of this loop, I chose to use the window that has a width with same of image width, and height of $WINDOW\_SIZE$. I calculated the total mean for this area, and applied same calculated NCC value to pixels with coordinate y and all the pixels in the x coordinate of window.
+I thought that since this approach compares the value of horizontal block, it would not capture the local pixel difference as much as the previous one, but would be much faster.
 
 \begin{figure}[h]
     \centering
@@ -284,6 +342,8 @@ def transform_fundamental_matrix(F, h1, h2):
     \caption{\emph{Left:} My result was spectacular. \emph{Right:} Curious.}
     \label{fig:result1}
 \end{figure}
+
+
 
 My results are summarized in Table~\ref{tab:table1}.
 
