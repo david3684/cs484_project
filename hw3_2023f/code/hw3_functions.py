@@ -12,12 +12,12 @@
 from utils import normalize_points
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
+
 
 
 #=======================================================================================
 # Your best hyperparameter findings here
-WINDOW_SIZE = 7
+WINDOW_SIZE = 20
 DISPARITY_RANGE = 40
 AGG_FILTER_SIZE = 5
 
@@ -28,52 +28,40 @@ def bayer_to_rgb_bilinear(bayer_img):
     ################################################################
     height, width = bayer_img.shape
     rgb_img = np.zeros((height + 2, width + 2, 3), dtype=np.uint8)
-    
-# 패딩을 고려하여 값을 채웁니다. 패딩으로 인해 인덱스가 1씩 밀립니다.
+    # added zero padding of 1 pixel width around the image for calculation efficiency    
+    # Extract bayer image into each channel of rgb image
+    # Range starts from 1 due to the padding
     rgb_img[1:-1:2, 1:-1:2, 0] = bayer_img[0::2, 0::2]    
     rgb_img[1:-1:2, 2:-1:2, 1] = bayer_img[0::2, 1::2]
     rgb_img[2:-1:2, 1:-1:2, 1] = bayer_img[1::2, 0::2]
     rgb_img[2:-1:2, 2:-1:2, 2] = bayer_img[1::2, 1::2]
-    
-    
+
     
     # For the R channel
-    print(rgb_img[0:10,0:10,2])
-    rgb_img[1::2, 2:-3:2, 0] = (rgb_img[1::2, 1:-3:2,0]//2 + rgb_img[1::2, 3:-1:2,0]//2) 
-    rgb_img[2:-3:2, 1::2, 0] = (rgb_img[1:-3:2, 1::2,0]//2 + rgb_img[3:-1:2, 1::2,0]//2) 
     
+    rgb_img[1:height:2, 2:width+1:2, 0] = (rgb_img[1:height:2, 1:width:2,0]//2 + rgb_img[1:height:2, 3:width+2:2,0]//2) 
+    rgb_img[2:height+1:2, 1:width:2, 0] = (rgb_img[1:height:2, 1:width:2,0]//2 + rgb_img[3:height+2:2, 1:width:2,0]//2) 
     
-    rgb_img[2:-3:2, 2:-3:2, 0] = (
-    rgb_img[1:-3:2, 1:-3:2, 0]//4 + rgb_img[1:-3:2, 3:-1:2, 0]//4 +
-    rgb_img[3:-1:2, 1:-3:2, 0]//4 + rgb_img[3:-1:2, 3:-1:2, 0]//4
+
+    rgb_img[2:height+1:2, 2:width+1:2, 0] = (
+    rgb_img[1:height:2, 1:width:2, 0]//4 + rgb_img[1:height:2, 3:width+2:2, 0]//4 +
+    rgb_img[3:height+2:2, 1:width:2, 0]//4 + rgb_img[3:height+2:2, 3:width+2:2, 0]//4
 ) 
-    print(rgb_img[0:10,0:10,2])
-    #cv2.imwrite('/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result/rgb_r.png', rgb_img[:,:,2])
+
     
-    #np.savetxt('/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result/rgb_img.txt', rgb_img.reshape(-1, rgb_img.shape[-1]), fmt='%d', delimiter=', ')
-    # For the G channel
-    # For the G channel
-    # Take care of array shapes during slicing
-    # Calculate the size of the smallest possible aligned sub-arrays
-    print(rgb_img[0:10,0:10,1])
-    # 첫 번째 연산
+    
+    #For the G channel
     rgb_img[1:-1:2, 1:-1:2, 1] = (
         rgb_img[1:-1:2, 0:-2:2, 1]//4 + rgb_img[0:-2:2, 1:-1:2, 1]//4 +
         rgb_img[2::2, 1:-1:2, 1]//4 + rgb_img[1:-1:2, 2::2, 1]//4
     )
-    
-
-    # 두 번째 연산
-    rgb_img[2:-2:2, 2:-2:2, 1] = (
-        rgb_img[2:-2:2, 1:-3:2, 1]//4 + rgb_img[1:-3:2, 2:-2:2, 1]//4 +
-        rgb_img[3:-1:2, 2:-2:2, 1]//4 + rgb_img[2:-2:2, 3:-1:2, 1]//4
+    rgb_img[2:height+1:2, 2:width+1:2, 1] = (
+        rgb_img[2:height+1:2, 1:width:2, 1]//4 + rgb_img[1:height:2, 2:width+1:2, 1]//4 +
+        rgb_img[3:height+2:2, 2:width+1:2, 1]//4 + rgb_img[2:height+1:2, 3:width+2:2, 1]//4
     )
-    print(rgb_img[0:10,0:10,1])
-    
-    #cv2.imwrite('/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result/rgb_g.png', rgb_img[:,:,1])
 
-    
-    print(rgb_img[0:10,0:10,0])
+
+
     # For the B channel
     rgb_img[2::2, 1:-2:2, 2] = (rgb_img[2::2, 0:-3:2,2]//2 + rgb_img[2::2, 2:-1:2,2]//2) 
     rgb_img[1:-2:2, 2::2, 2] = (rgb_img[0:-3:2, 2::2,2]//2 + rgb_img[2:-1:2, 2::2,2]//2) 
@@ -81,12 +69,10 @@ def bayer_to_rgb_bilinear(bayer_img):
     rgb_img[0:-3:2, 0:-3:2, 2]//4 + rgb_img[0:-3:2, 2:-1:2, 2]//4 +
     rgb_img[2:-1:2, 0:-3:2, 2]//4 + rgb_img[2:-1:2, 2:-1:2, 2]//4
 )
-    print(rgb_img[0:10,0:10,0])
-    #print(rgb_img[0:10,0:10,0])
-    # 마지막에 패딩 제거
+    
+    #Remove Padding
     rgb_img = rgb_img[1:-1, 1:-1, :]
 
-    #cv2.imwrite('/Users/treblocami/Desktop/job/cs484_project/hw3_2023f/result/rgb_b.png', rgb_img[:,:,0])
     ################################################################
     return rgb_img
 
@@ -111,30 +97,16 @@ def calculate_fundamental_matrix(pts1, pts2):
     
     n = pts1.shape[0]
     
-    # Normalization
-    mean1 = np.mean(pts1, axis=0)
-    mean2 = np.mean(pts2, axis=0)
-    
-    scale1 = np.sqrt(2) / np.std(pts1)
-    scale2 = np.sqrt(2) / np.std(pts2)
-    
-    T1 = np.array([
-        [scale1, 0, -scale1 * mean1[0]],
-        [0, scale1, -scale1 * mean1[1]],
-        [0, 0, 1]
-    ])
-    
-    T2 = np.array([
-        [scale2, 0, -scale2 * mean2[0]],
-        [0, scale2, -scale2 * mean2[1]],
-        [0, 0, 1]
-    ])
-    
-    pts1 = np.column_stack([pts1, np.ones(n)])
-    pts2 = np.column_stack([pts2, np.ones(n)])
+    # Convert points to homogeneous coordinates
+    pts1_homogeneous = np.column_stack([pts1, np.ones(n)])
+    pts2_homogeneous = np.column_stack([pts2, np.ones(n)])
 
-    pts1_normalized = (T1 @ pts1.T).T
-    pts2_normalized = (T2 @ pts2.T).T
+    pts1_normalized, T1 = normalize_points(pts1_homogeneous.T, 2)
+    pts2_normalized, T2 = normalize_points(pts2_homogeneous.T, 2)
+    
+    # Transpose back to original structure
+    pts1_normalized = pts1_normalized.T
+    pts2_normalized = pts2_normalized.T
     
     A = np.zeros((n, 9))
     for i in range(n):
@@ -162,8 +134,6 @@ def transform_fundamental_matrix(F, h1, h2):
     # Your code here
     ################################################################
     F_mod = np.linalg.inv(h2).T @ F @ np.linalg.inv(h1)
-    
-    
     ################################################################
     return F_mod
 
@@ -181,20 +151,20 @@ def rectify_stereo_images(img1, img2, h1, h2):
     # Create translation matrices
     T1 = np.array([[1, 0, width // 4],
                    [0, 1, height // 4],
-                   [0, 0, 1]])
+                    [0, 0, 1]])
     
     T2 = np.array([[1, 0, width // 4],
                    [0, 1, height // 4],
-                   [0, 0, 1]])
+                    [0, 0, 1]])
     
     # Create scaling matrices
     S1 = np.array([[0.75, 0, 0],
-                   [0, 0.75, 0],
-                   [0, 0, 1]])
+                    [0, 0.75, 0],
+                    [0, 0, 1]])
     
     S2 = np.array([[0.75, 0, 0],
-                   [0, 0.75, 0],
-                   [0, 0, 1]])
+                    [0, 0.75, 0],
+                    [0, 0, 1]])
     
     # Modify homography matrices
     h1_mod = T1 @ S1 @ h1
@@ -223,11 +193,11 @@ def calculate_disparity_map(img1, img2):
     # where u is pixel positions (x,y) in each images and d is dispairty map.
     # Your code here
     window_size=20
-    d_max=50
+    d_max=DISPARITY_RANGE
     
     
     h, w = img1_gray.shape
-    half_window = window_size // 2
+    half_window = WINDOW_SIZE // 2
     
     # Initialize disparity map and cost volume
     disparity_map = np.zeros((h, w), dtype=np.float32)
@@ -256,10 +226,10 @@ def calculate_disparity_map(img1, img2):
             cost_volume[y, half_window:w - half_window, d] = -ncc
 
     # Aggregate costs
-    guide_img = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)  # Assuming img1 is the reference image
+    # Assuming img1 is the reference image
     radius = 40
     epsilon = 0.2**2  # Epsilon in the Guided Filter
-    gf = cv2.ximgproc.createGuidedFilter(guide_img, radius, epsilon)
+    gf = cv2.ximgproc.createGuidedFilter(img1_gray, radius, epsilon)
 
     # Apply the Guided Filter to each disparity slice of the cost volume
     for d in range(d_max):
