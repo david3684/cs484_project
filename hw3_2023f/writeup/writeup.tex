@@ -133,8 +133,10 @@ def bayer_to_rgb_bilinear(bayer_img):
     rgb_img[3:height+2:2, 1:width:2,0]//2) 
 
     rgb_img[2:height+1:2, 2:width+1:2, 0] = (
-        rgb_img[1:height:2, 1:width:2, 0]//4 + rgb_img[1:height:2, 3:width+2:2, 0]//4 +
-        rgb_img[3:height+2:2, 1:width:2, 0]//4 + rgb_img[3:height+2:2, 3:width+2:2, 0]//4
+        rgb_img[1:height:2, 1:width:2, 0]//4 + 
+        rgb_img[1:height:2, 3:width+2:2, 0]//4 +
+        rgb_img[3:height+2:2, 1:width:2, 0]//4 + 
+        rgb_img[3:height+2:2, 3:width+2:2, 0]//4
     ) 
     #For the G channel
     rgb_img[1:-1:2, 1:-1:2, 1] = (
@@ -153,7 +155,6 @@ def bayer_to_rgb_bilinear(bayer_img):
     # For the B channel
     rgb_img[2::2, 1:-2:2, 2] = (rgb_img[2::2, 0:-3:2,2]//2 +
     rgb_img[2::2, 2:-1:2,2]//2) 
-    
     rgb_img[1:-2:2, 2::2, 2] = (rgb_img[0:-3:2, 2::2,2]//2 +
     rgb_img[2:-1:2, 2::2,2]//2) 
     
@@ -178,7 +179,7 @@ I'll explain my code step by step.
 \begin{enumerate}
     \item First, I made the empty array for result image with 2 pixels bigger than bayer image. This is because I wanted to add zero padding of 1 pixel around the image, for edge calculation.
     \item Then I brought the each R,G,B pixels from the bayer image and applied to channels in R,G,B order. To apply padding, i left the first and last pixels zero and filled the pixel value starting from 1.
-    \item For each channel, used bilinear interpolation to fill the missing pixel values. I used indexing and slicing of Numpy to do this, since it is much faster than naive for loops.
+    \item For each channel, used bilinear interpolation to fill the missing pixel values. I used indexing and slicing of Numpy to do this, since it is much faster than naive for loops. I first diveded the value and then sum up, because when I summed up first it overflowed the index RGB value (from 0 to 255), so to avoid this I devided first.
     \item For the pixels in edges, I just used the same ways with other pixels, the only difference is that averaged the zero padding together. This makes the edge value smaller than intended, but it could the code more precise.
     \item Finally, I removed the zero padding by slicing the result image from the first pixel to the second last pixel.
 \end{enumerate}
@@ -268,17 +269,16 @@ def rectify_stereo_images(img1, img2, h1, h2):
     dst1 = cv2.perspectiveTransform(pts, h1)
     dst2 = cv2.perspectiveTransform(pts, h2)
     # Calculate the bounding box dimensions
-    x_min1, y_min1 = np.int32(dst1.min(axis=0).ravel())
-    x_max1, y_max1 = np.int32(dst1.max(axis=0).ravel())
-    x_min2, y_min2 = np.int32(dst2.min(axis=0).ravel())
-    x_max2, y_max2 = np.int32(dst2.max(axis=0).ravel())
+    x_min1, y_min1 = np.int32(dst1.min(axis=0))[0]
+    x_max1, y_max1 = np.int32(dst1.max(axis=0))[0]
+    x_min2, y_min2 = np.int32(dst2.min(axis=0))[0]
+    x_max2, y_max2 = np.int32(dst2.max(axis=0))[0]
 
     x_min = min(x_min1, x_min2)
     y_min = min(y_min1, y_min2)
     x_max = max(x_max1, x_max2)
     y_max = max(y_max1, y_max2)
 
-    # Create new translation matrices based on the maximum bounding box
     T1 = np.array([[1, 0, -x_min + 50],
             [0, 1, -y_min + 50],
             [0, 0, 1]])
@@ -289,53 +289,50 @@ def rectify_stereo_images(img1, img2, h1, h2):
     h1_mod = T1 @ h1
     h2_mod = T2 @ h2
 
-    new_dims = (x_max - x_min + 100, y_max - y_min + 100)
+    new_size = (x_max - x_min + 100, y_max - y_min + 100)
 
-
-    # Warp the images
-    img1_rectified = cv2.warpPerspective(img1, h1_mod, new_dims)
-    img2_rectified = cv2.warpPerspective(img2, h2_mod, new_dims)
+    img1_rectified = cv2.warpPerspective(img1, h1_mod, new_size)
+    img2_rectified = cv2.warpPerspective(img2, h2_mod, new_size)
 
 
     return img1_rectified, img2_rectified, h1_mod, h2_mod
 \end{lstlisting}
 \begin{enumerate}
+    \item \textbf{transform\_fundamental\_matrix} In this, I just simply made new fundamental matrix with the given homographies, $F_{mod}=H_2^{-T}FH_1^{-1}$
+    \item Next, I changed the homography matrices to avoid cropping. To implement this, I transformed the corner points first and set the edge of rectified images with the boundary. Details are explained below.
     \item \textbf{Defining Corner Points} First, I defined the corner points of the imgae in $pts$. After calculating new homography, the points are translated to new point with it to obtain the boundary of rectified image.
     
     \item \textbf{Calculate Transformed Points} The corner points are transformed using the original homography matrices $H$ and $H'$ for both images. I used $cv2.perspectiveTransform()$ with corner points and homography matrix, to apply transform in the corner points.
 
-    \item \textbf{Bounding Box Calculation} I obatined the coordinates of two bounding boxes from each 
-    \begin{verbatim}
-    x_min1, y_min1 = np.int32(dst1.min(axis=0).ravel())
-    x_max1, y_max1 = np.int32(dst1.max(axis=0).ravel())
-    \end{verbatim}
-
-    \item \textbf{Maximum Bounding Box:} A common bounding box is computed that can contain both rectified images.
-    \begin{verbatim}
-    x_min = min(x_min1, x_min2)
-    y_min = min(y_min1, y_min2)
-    x_max = max(x_max1, x_max2)
-    y_max = max(y_max1, y_max2)
-    \end{verbatim}
+    \item \textbf{Bounding Box Calculation} I obtained the coordinates of two bounding boxes from each images by choosing the minimum and maximum values among the corner point coordinates transformed by $cv2.perspectiveTransform()$. Since the result of transform is float value, I rounded them to integer by $np.int32$, and made into 1-dimensional array.
+    \item Furthermore, I chose the minimum and maximum value among two boundaries of each images, to set the translation matrix with respect of bigger value. I did this because we should use box that could contain both images, thus we should use the bigger box to not crop the image.
+    \item \textbf{Translation Matrices} By the coordinate of boundaries obtained in previous step, I constructed the translation matrices. I added margin of 50 pixels around the images, to make it not tightly stick to the edge and look like what in the supplementary slides.
+    \item \textbf{Modified Homographies} The original homography matrices are modified using the translation matrices, and obtained two new homography matrices.
+    \item \textbf{Warp Image} Finally, I applied $cv2.warpPerspective()$ to warp the images using the modified homography matrices and obtain the rectified images. Value $new\_size$ is the size of final image after warp, which contains margin of 50 pixels for four directions around the image. The result could be seen in \ref*{result1}
     
-    \item \textbf{Translation Matrices:} Translation matrices are calculated to place the transformed images within the maximum bounding box with an added margin.
-    \begin{verbatim}
-    T1 = np.array([[1, 0, -x_min + margin], [0, 1, -y_min + margin], [0, 0, 1]])
-    \end{verbatim}
-    
-    \item \textbf{Modified Homographies:} The original homography matrices are modified using the translation matrices.
-    \begin{verbatim}
-    h1_mod = T1 @ h1
-    h2_mod = T2 @ h2
-    \end{verbatim}
-
-    \item \textbf{Image Warping:} Finally, the `cv2.warpPerspective` function is used to warp the images using the modified homography matrices and obtain the rectified images.
-    \begin{verbatim}
-    img1_rectified = cv2.warpPerspective(img1, h1_mod, new_dims)
-    img2_rectified = cv2.warpPerspective(img2, h2_mod, new_dims)
-    \end{verbatim}
 \end{enumerate}
-
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{../result/rectified_imgs_result.png}
+    \caption{Rectified Images}
+    \label{fig:result1}
+\end{figure}
+The fundamental matrices obtained from each function is like this.
+$$ \left[
+\begin{matrix}
+    1.13843181e-21 & -3.30364530e-16 & -1.02724445e-15\\
+    2.56400517e-18 & -4.61081404e-17 & 9.19265708e-01\\
+    9.69843866e-17 & -9.19265708e-01 & 4.87118170e-14
+\end{matrix}
+\right] $$
+$$ \left[
+\begin{matrix}
+    8.24589712-22 & -3.30459784e-16 & 3.03620926e-14\\
+    2.49922896e-18 & -4.61042020e-17 & 9.19265708e-01\\
+    -1.37016042e-16 & -9.19265708e-01 & -3.16691741e-12\\
+\end{matrix}
+\right] $$
+\section*{Checking Epipolar Constraint}
 \section*{Calculating Disparity Map}
 The final, and the most complex part of this project is cacluating the disparity map.
 \begin{lstlisting}[language=python]
@@ -363,7 +360,6 @@ def calculate_disparity_map(img1, img2):
         img2_shifted = np.roll(img2_gray, d, axis=1)
 
         for y in range(half_window, h - half_window):
-            # Vectorized inner loop
             w1 = img1_gray[y - half_window:y + half_window + 1, half_window:w - half_window]
             w2 = img2_shifted[y - half_window:y + half_window + 1, half_window:w - half_window]
             
@@ -394,7 +390,7 @@ def calculate_disparity_map(img1, img2):
     \item \textbf{Calculating NCC, part 1} For all disparity $d$, for each window, I calculated NCC. First I shifted $img2$ by $d$ with $np.roll()$. The reason I used this function is for computational efficiency (vectorized calculation) and for edge constraints. 
     Then I calculated the mean of each window in $img1$ and $img2$. For the window size i used total width of the image and and the height of the window for each y coordinate. This is explained in more detail below.
     \item \textbf{Calculating NCC, part 2} Then i calculated the numerator and denominator of NCC with respect to the NCC equation. To get rid of the case if denominator is zero, I set the ncc value -1 in that case. Finally, I put cacluated NCC cost in the $cost\_volume$ matrix for all y coordinates of image.
-    \item \textbf{Cost Aggregation} For cost aggregation, I used guided filter. $cv2.ximgproc.createGuidedFilter()$ creates a guided filter with given image, and parameters of window size $radius$ and regularization term $epsilon$. I first created the guided filter with reference image $img1$, and then applied it to each layers of the cost volume traversing through disparities.
+    \item \textbf{Cost Aggregation} For cost aggregation, I used guided filter. The original box filter version is explained in the bottomost part of the report. $cv2.ximgproc.createGuidedFilter()$ creates a guided filter with given image, and parameters of window size $radius$ and regularization term $epsilon$. I first created the guided filter with reference image $img1$, and then applied it to each layers of the cost volume traversing through disparities.
     \item \textbf{Get Disparity Map} Finally, I obtained the disparity map by choosing the disparity of pixels with minimum cost. I used $np.argmin()$ along the disparity axis of the cost volume. The reason why I made the value negative is because when I didn't, the result disparity map showed just an opposite result from the answer in slides. The deep area had blue color, and shallow area had red color. When I put minus on the value, bad pixel error decreased tremendously. I was unable to figure out why this happen, so I had to just choose the way with lower error. 
 \end{enumerate}
 
@@ -514,4 +510,14 @@ After applying Sub-Pixel Disparity, the bad pixel ratio \textbf{decreased about 
     \label{fig:result4}
     
 \end{figure}
+\section*{Box Filter Cost Aggregation}
+The original implementation with box filter is this.
+\begin{lstlisting}[language=python]
+# Box Filter
+for d in range(DISPARITY_RANGE):
+    cost_volume[:,:,d] = cv2.boxFilter(cost_volume[:,:,d], ddepth=-1, ksize=(30, 30))
+\end{lstlisting}
+The error seem decreased in big size filters, so I used filter size of 30.
+\section*{Machine Information}
+All the results were calculated in M2 Pro Macbook, with 16GB RAM.
 \end{document}

@@ -41,8 +41,6 @@ def bayer_to_rgb_bilinear(bayer_img):
     
     rgb_img[1:height:2, 2:width+1:2, 0] = (rgb_img[1:height:2, 1:width:2,0]//2 + rgb_img[1:height:2, 3:width+2:2,0]//2) 
     rgb_img[2:height+1:2, 1:width:2, 0] = (rgb_img[1:height:2, 1:width:2,0]//2 + rgb_img[3:height+2:2, 1:width:2,0]//2) 
-    
-
     rgb_img[2:height+1:2, 2:width+1:2, 0] = (
     rgb_img[1:height:2, 1:width:2, 0]//4 + rgb_img[1:height:2, 3:width+2:2, 0]//4 +
     rgb_img[3:height+2:2, 1:width:2, 0]//4 + rgb_img[3:height+2:2, 3:width+2:2, 0]//4
@@ -151,10 +149,10 @@ def rectify_stereo_images(img1, img2, h1, h2):
     dst1 = cv2.perspectiveTransform(pts, h1)
     dst2 = cv2.perspectiveTransform(pts, h2)
     # Calculate the bounding box dimensions
-    x_min1, y_min1 = np.int32(dst1.min(axis=0).ravel())
-    x_max1, y_max1 = np.int32(dst1.max(axis=0).ravel())
-    x_min2, y_min2 = np.int32(dst2.min(axis=0).ravel())
-    x_max2, y_max2 = np.int32(dst2.max(axis=0).ravel())
+    x_min1, y_min1 = np.int32(dst1.min(axis=0))[0]
+    x_max1, y_max1 = np.int32(dst1.max(axis=0))[0]
+    x_min2, y_min2 = np.int32(dst2.min(axis=0))[0]
+    x_max2, y_max2 = np.int32(dst2.max(axis=0))[0]
 
     x_min = min(x_min1, x_min2)
     y_min = min(y_min1, y_min2)
@@ -172,12 +170,12 @@ def rectify_stereo_images(img1, img2, h1, h2):
     h1_mod = T1 @ h1
     h2_mod = T2 @ h2
 
-    new_dims = (x_max - x_min + 100, y_max - y_min + 100)
+    new_size = (x_max - x_min + 100, y_max - y_min + 100)
 
 
     # Warp the images
-    img1_rectified = cv2.warpPerspective(img1, h1_mod, new_dims)
-    img2_rectified = cv2.warpPerspective(img2, h2_mod, new_dims)
+    img1_rectified = cv2.warpPerspective(img1, h1_mod, new_size)
+    img2_rectified = cv2.warpPerspective(img2, h2_mod, new_size)
 
     
     return img1_rectified, img2_rectified, h1_mod, h2_mod
@@ -210,7 +208,6 @@ def calculate_disparity_map(img1, img2):
         img2_shifted = np.roll(img2_gray, d, axis=1)
 
         for y in range(half_window, h - half_window):
-            # Vectorized inner loop
             w1 = img1_gray[y - half_window:y + half_window + 1, half_window:w - half_window]
             w2 = img2_shifted[y - half_window:y + half_window + 1, half_window:w - half_window]
             
@@ -224,20 +221,24 @@ def calculate_disparity_map(img1, img2):
             cost_volume[y, half_window:w - half_window, d] = -ncc
 
     # Aggregate costs
+    # Box Filter
+    for d in range(DISPARITY_RANGE):
+        cost_volume[:,:,d] = cv2.boxFilter(cost_volume[:,:,d], ddepth=-1, ksize=(30, 30))
+    """
+    # Guided Filter
     radius = 40
-    epsilon = 0.1  # Epsilon in the Guided Filter
+    epsilon = 0.1  
     gf = cv2.ximgproc.createGuidedFilter(img1_gray, radius, epsilon)
 
     for d in range(DISPARITY_RANGE):
         cost_volume[:, :, d] = gf.filter(cost_volume[:, :, d])
-
     
-    # Get disparity map
+    """
     disparity_map = -np.argmin(cost_volume, axis=2)
-
+    """
     
     #Sub-Pixel Disparity
-    limit = 1e-5  # Smoothing term to prevent division by zero
+    limit = 1e-5  
     max_subpixel_correction = 0.5
 
     for y in range(h):
@@ -258,7 +259,7 @@ def calculate_disparity_map(img1, img2):
             subpixel_correction = np.clip(subpixel_correction, -max_subpixel_correction, max_subpixel_correction)
 
             disparity_map[y, x] = d + subpixel_correction
-    
+    """
     return disparity_map
 
 
