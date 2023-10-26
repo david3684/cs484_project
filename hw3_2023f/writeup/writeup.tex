@@ -61,6 +61,7 @@
 \usepackage{booktabs}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{amsmath}
 \lstdefinestyle{codestyle}{
 	frame=single,
 	basicstyle=\ttfamily\footnotesize,
@@ -250,6 +251,90 @@ def calculate_fundamental_matrix(pts1, pts2):
 \end{enumerate}
 
 \section*{Stereo Rectification}
+\begin{lstlisting}[language=python]
+def transform_fundamental_matrix(F, h1, h2):
+    
+    
+    F_mod = np.linalg.inv(h2).T @ F @ np.linalg.inv(h1)
+    
+    return F_mod
+
+def rectify_stereo_images(img1, img2, h1, h2):
+    
+    height, width = img1.shape[:2]
+        
+    pts = np.float32([[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]]).reshape(-1, 1, 2)
+
+    dst1 = cv2.perspectiveTransform(pts, h1)
+    dst2 = cv2.perspectiveTransform(pts, h2)
+    # Calculate the bounding box dimensions
+    x_min1, y_min1 = np.int32(dst1.min(axis=0).ravel())
+    x_max1, y_max1 = np.int32(dst1.max(axis=0).ravel())
+    x_min2, y_min2 = np.int32(dst2.min(axis=0).ravel())
+    x_max2, y_max2 = np.int32(dst2.max(axis=0).ravel())
+
+    x_min = min(x_min1, x_min2)
+    y_min = min(y_min1, y_min2)
+    x_max = max(x_max1, x_max2)
+    y_max = max(y_max1, y_max2)
+
+    # Create new translation matrices based on the maximum bounding box
+    T1 = np.array([[1, 0, -x_min + 50],
+            [0, 1, -y_min + 50],
+            [0, 0, 1]])
+    T2 = np.array([[1, 0, -x_min + 50],
+                [0, 1, -y_min + 50],
+                [0, 0, 1]])
+
+    h1_mod = T1 @ h1
+    h2_mod = T2 @ h2
+
+    new_dims = (x_max - x_min + 100, y_max - y_min + 100)
+
+
+    # Warp the images
+    img1_rectified = cv2.warpPerspective(img1, h1_mod, new_dims)
+    img2_rectified = cv2.warpPerspective(img2, h2_mod, new_dims)
+
+
+    return img1_rectified, img2_rectified, h1_mod, h2_mod
+\end{lstlisting}
+\begin{enumerate}
+    \item \textbf{Defining Corner Points} First, I defined the corner points of the imgae in $pts$. After calculating new homography, the points are translated to new point with it to obtain the boundary of rectified image.
+    
+    \item \textbf{Calculate Transformed Points} The corner points are transformed using the original homography matrices $H$ and $H'$ for both images. I used $cv2.perspectiveTransform()$ with corner points and homography matrix, to apply transform in the corner points.
+
+    \item \textbf{Bounding Box Calculation} I obatined the coordinates of two bounding boxes from each 
+    \begin{verbatim}
+    x_min1, y_min1 = np.int32(dst1.min(axis=0).ravel())
+    x_max1, y_max1 = np.int32(dst1.max(axis=0).ravel())
+    \end{verbatim}
+
+    \item \textbf{Maximum Bounding Box:} A common bounding box is computed that can contain both rectified images.
+    \begin{verbatim}
+    x_min = min(x_min1, x_min2)
+    y_min = min(y_min1, y_min2)
+    x_max = max(x_max1, x_max2)
+    y_max = max(y_max1, y_max2)
+    \end{verbatim}
+    
+    \item \textbf{Translation Matrices:} Translation matrices are calculated to place the transformed images within the maximum bounding box with an added margin.
+    \begin{verbatim}
+    T1 = np.array([[1, 0, -x_min + margin], [0, 1, -y_min + margin], [0, 0, 1]])
+    \end{verbatim}
+    
+    \item \textbf{Modified Homographies:} The original homography matrices are modified using the translation matrices.
+    \begin{verbatim}
+    h1_mod = T1 @ h1
+    h2_mod = T2 @ h2
+    \end{verbatim}
+
+    \item \textbf{Image Warping:} Finally, the `cv2.warpPerspective` function is used to warp the images using the modified homography matrices and obtain the rectified images.
+    \begin{verbatim}
+    img1_rectified = cv2.warpPerspective(img1, h1_mod, new_dims)
+    img2_rectified = cv2.warpPerspective(img2, h2_mod, new_dims)
+    \end{verbatim}
+\end{enumerate}
 
 \section*{Calculating Disparity Map}
 The final, and the most complex part of this project is cacluating the disparity map.
@@ -291,9 +376,9 @@ def calculate_disparity_map(img1, img2):
             ncc = -1 if denominator == 0 else numerator / denominator
             cost_volume[y, half_window:w - half_window, d] = -ncc
 
-    # Aggregate costs
+    # Cost Aggregation
     radius = 40
-    epsilon = 0.2**2  # Epsilon in the Guided Filter
+    epsilon = 0.1 
     gf = cv2.ximgproc.createGuidedFilter(img1_gray, radius, epsilon)
 
     for d in range(DISPARITY_RANGE):
@@ -305,7 +390,12 @@ def calculate_disparity_map(img1, img2):
 \end{lstlisting}
 
 \begin{enumerate}
-    \item 
+    \item \textbf{Initialization} First initialized the disparity map and cost volume with zero numpy array. 
+    \item \textbf{Calculating NCC, part 1} For all disparity $d$, for each window, I calculated NCC. First I shifted $img2$ by $d$ with $np.roll()$. The reason I used this function is for computational efficiency (vectorized calculation) and for edge constraints. 
+    Then I calculated the mean of each window in $img1$ and $img2$. For the window size i used total width of the image and and the height of the window for each y coordinate. This is explained in more detail below.
+    \item \textbf{Calculating NCC, part 2} Then i calculated the numerator and denominator of NCC with respect to the NCC equation. To get rid of the case if denominator is zero, I set the ncc value -1 in that case. Finally, I put cacluated NCC cost in the $cost\_volume$ matrix for all y coordinates of image.
+    \item \textbf{Cost Aggregation} For cost aggregation, I used guided filter. $cv2.ximgproc.createGuidedFilter()$ creates a guided filter with given image, and parameters of window size $radius$ and regularization term $epsilon$. I first created the guided filter with reference image $img1$, and then applied it to each layers of the cost volume traversing through disparities.
+    \item \textbf{Get Disparity Map} Finally, I obtained the disparity map by choosing the disparity of pixels with minimum cost. I used $np.argmin()$ along the disparity axis of the cost volume. The reason why I made the value negative is because when I didn't, the result disparity map showed just an opposite result from the answer in slides. The deep area had blue color, and shallow area had red color. When I put minus on the value, bad pixel error decreased tremendously. I was unable to figure out why this happen, so I had to just choose the way with lower error. 
 \end{enumerate}
 
 There are some points that I considered to make this code.
@@ -333,32 +423,95 @@ There are some points that I considered to make this code.
 
 This was the original for loop that I made. However, three loops together made a lot of computational time; so I had to reduce the number of loops.
 In original approach, I calculated NCC with two boxes in each images, so I had to traverse two loops for x and y coordinates. To get rid of this loop, I chose to use the window that has a width with same of image width, and height of $WINDOW\_SIZE$. I calculated the total mean for this area, and applied same calculated NCC value to pixels with coordinate y and all the pixels in the x coordinate of window.
-I thought that since this approach compares the value of horizontal block, it would not capture the local pixel difference as much as the previous one, but would be much faster.
+I thought that since this approach compares the value of horizontal block, it would not capture the local pixel difference as much as the previous one, but would be much faster. The computation result is in~\ref{fig:result2}.
 
+\section*{Choosing the Hyperparameters}
+With $WINDOW\_SIZE$ of 30 and $DISPARITY\_RANGE$ of 40, the result was as below;
 \begin{figure}[h]
     \centering
-    \includegraphics[width=5cm]{placeholder.jpg}
-    \includegraphics[width=5cm]{placeholder.jpg}
-    \caption{\emph{Left:} My result was spectacular. \emph{Right:} Curious.}
-    \label{fig:result1}
+    \includegraphics[width=9cm]{../result/result_1.png}
+    \caption{Computation Result with window size=30 and disparity range=40}
+    \label{fig:result2}
 \end{figure}
 
+Choosing the disprity range was quite easy; I first set the max disparity a large value, such as 100. Then I checked out that the most of the disparity are located between 0 to 50. I choosed 40 as max disparity to get rid of the outliers and to calculate bit tightly for large disparities.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=9cm]{../result/disparityragne100.png}
+    \caption{Disparity map with max disparity 100. We could notice that most of disparity is smaller than 50.}
+    \label{fig:result3}
+\end{figure}
 
+Choosing window size was bit confusing. At the beginning I thought the small value will give better result, but oppositely, large size of window made better result. 
 
-My results are summarized in Table~\ref{tab:table1}.
 
 \begin{table}[h]
     \centering
-    \begin{tabular}{lr}
+    \begin{tabular}{lrrr}
         \toprule
-        Condition & Time (seconds) \\
+        {Window Size}&{Bad Pixel Ratio (percent)}&{Computation Time{seconds}} \\
         \midrule
-        Test 1 & 1 \\
-        Test 2 & 1000 \\
+        10 & 22.74 & 4.75\\
+        20 & 19.67 & 5.64\\
+        30 & 18.48 & 6.87\\
+        40 & 18.32 & 7.60\\
+        50 & 18.56 & 8.68\\
         \bottomrule
     \end{tabular}
-    \caption{Stunning revelation about the efficiency of my code.}
+    \caption{Window Size vs Bad Pixel Ratio, all other conditions identical.}
     \label{tab:table1}
 \end{table}
 
+As noticed in \ref{tab:table1}, the bad pixel ratio start to increase again around 50. I choosed 30 for window size, because bit larger value would give better error ratio but worse in compuational time.
+
+Next, I choosed the parameters for the guided filter, $radius$ and $epsilon$. For $radius$, I used 40, and for epsilon I used $0.1$. Actually the change in this parameter affected the result a lot than I expected, so i just choosed the value empirically. What I noticed that in this project, more smoothing usually leads to better error ratio. Since larger radius and smaller epsilon leads to more smoothing and less edge preservation, it produced better result in error ratio. I think this would vary with different ground truth disparity maps.
+
+\section*{Sub-Pixel Disparity}
+I additionally implemented the Sub-Pixel Disparity.
+\begin{lstlisting}[language=python]
+#Sub-Pixel Disparity
+limit = 1e-5  # Smoothing term to prevent division by zero
+max_subpixel_correction = 0.5
+
+for y in range(h):
+    for x in range(w):
+        d = disparity_map[y, x]
+        if d == 0 or d == DISPARITY_RANGE - 1:
+            continue
+        C0 = cost_volume[y, x, d-1]
+        C1 = cost_volume[y, x, d]
+        C2 = cost_volume[y, x, d+1]
+
+        denominator = 2*(C2 + C0 - 2*C1)
+        
+        # Check if the denominator is too small or zero
+        if np.abs(denominator) < limit:
+            continue
+        subpixel_correction = (C2 - C0) / denominator
+        subpixel_correction = np.clip(subpixel_correction, -max_subpixel_correction, max_subpixel_correction)
+
+        disparity_map[y, x] = d + subpixel_correction
+\end{lstlisting}
+\begin{enumerate}
+    \item \textbf{Limiting the range of Value} 
+    $epsilon$ and $max\_subpixel\_correction$ is both the parameter to limit the range of value for subpixel. This will be explained later.
+    \item \textbf{Parabolic Fitting} I applied parabolic fitting for each coordinates and three disparities in a row, with regards to this equation:
+    \[
+d_{\text{sub-pixel}} = d + \frac{C(d-1) - C(d+1)}{2(C(d-1) - 2C(d) + C(d+1))}
+\]
+which is a parabolic fitting crossing three points.
+
+Since the denominator value could go to zero, I excluded the pixels with denominator value with smaller than limit. 
+    \item\textbf{Max Correction} Even after I applied limit, some of the denominator values were too small, making those sub-pixel disparity very large. Thus, I set the max correction value and applied $np.clip()$ to limit the value of correction.
+
+\end{enumerate}
+After applying Sub-Pixel Disparity, the bad pixel ratio \textbf{decreased about 0.08 percent}. Though my implementation is not perfect, with a better correction It would give a better result with correction. The disparity map before and after applying sub-pixel disparity is shown in \ref{fig:result4}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=7cm]{../result/disparity_map_nocorrection.png}
+    \includegraphics[width=7cm]{../result/disparity_map_correction.png}
+    \caption{Top: Withoud Sub-Pixel, Bottom: With Sub-Pixel.}
+    \label{fig:result4}
+    
+\end{figure}
 \end{document}

@@ -17,7 +17,7 @@ import cv2
 
 #=======================================================================================
 # Your best hyperparameter findings here
-WINDOW_SIZE = 20
+WINDOW_SIZE = 30
 DISPARITY_RANGE = 40
 AGG_FILTER_SIZE = 5
 
@@ -113,7 +113,7 @@ def calculate_fundamental_matrix(pts1, pts2):
     
     U, S, Vt = np.linalg.svd(A)
     f = Vt[-1]
-    print(Vt, Vt[-1])
+    
     F = f.reshape(3, 3)
     
     U, S, Vt = np.linalg.svd(F)
@@ -146,34 +146,39 @@ def rectify_stereo_images(img1, img2, h1, h2):
     ################################################
     height, width = img1.shape[:2]
     
-    # Create translation matrices
-    T1 = np.array([[1, 0, width // 4],
-                   [0, 1, height // 4],
-                    [0, 0, 1]])
+    pts = np.float32([[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]]).reshape(-1, 1, 2)
     
-    T2 = np.array([[1, 0, width // 4],
-                   [0, 1, height // 4],
-                    [0, 0, 1]])
-    
-    # Create scaling matrices
-    S1 = np.array([[0.75, 0, 0],
-                    [0, 0.75, 0],
-                    [0, 0, 1]])
-    
-    S2 = np.array([[0.75, 0, 0],
-                    [0, 0.75, 0],
-                    [0, 0, 1]])
-    
-    # Modify homography matrices
-    h1_mod = T1 @ S1 @ h1
-    h2_mod = T2 @ S2 @ h2
-    
-    # Calculate new size for rectification
-    rectified_size = (int(width * 1.5), int(height * 1.5))
+    dst1 = cv2.perspectiveTransform(pts, h1)
+    dst2 = cv2.perspectiveTransform(pts, h2)
+    # Calculate the bounding box dimensions
+    x_min1, y_min1 = np.int32(dst1.min(axis=0).ravel())
+    x_max1, y_max1 = np.int32(dst1.max(axis=0).ravel())
+    x_min2, y_min2 = np.int32(dst2.min(axis=0).ravel())
+    x_max2, y_max2 = np.int32(dst2.max(axis=0).ravel())
+
+    x_min = min(x_min1, x_min2)
+    y_min = min(y_min1, y_min2)
+    x_max = max(x_max1, x_max2)
+    y_max = max(y_max1, y_max2)
+
+    # Create new translation matrices based on the maximum bounding box
+    T1 = np.array([[1, 0, -x_min + 50],
+               [0, 1, -y_min + 50],
+               [0, 0, 1]])
+    T2 = np.array([[1, 0, -x_min + 50],
+                [0, 1, -y_min + 50],
+                [0, 0, 1]])
+
+    h1_mod = T1 @ h1
+    h2_mod = T2 @ h2
+
+    new_dims = (x_max - x_min + 100, y_max - y_min + 100)
+
 
     # Warp the images
-    img1_rectified = cv2.warpPerspective(img1, h1_mod, rectified_size)
-    img2_rectified = cv2.warpPerspective(img2, h2_mod, rectified_size)
+    img1_rectified = cv2.warpPerspective(img1, h1_mod, new_dims)
+    img2_rectified = cv2.warpPerspective(img2, h2_mod, new_dims)
+
     
     return img1_rectified, img2_rectified, h1_mod, h2_mod
 
@@ -215,12 +220,12 @@ def calculate_disparity_map(img1, img2):
             numerator = np.sum((w1 - mean_w1) * (w2 - mean_w2), axis=0)
             denominator = np.sqrt(np.sum((w1 - mean_w1)**2, axis=0) * np.sum((w2 - mean_w2)**2, axis=0))
 
-            ncc = -1 if denominator == 0 else numerator / denominator
+            ncc = np.where(denominator == 0, -1, numerator / denominator)
             cost_volume[y, half_window:w - half_window, d] = -ncc
 
     # Aggregate costs
     radius = 40
-    epsilon = 0.2**2  # Epsilon in the Guided Filter
+    epsilon = 0.1  # Epsilon in the Guided Filter
     gf = cv2.ximgproc.createGuidedFilter(img1_gray, radius, epsilon)
 
     for d in range(DISPARITY_RANGE):
@@ -232,11 +237,9 @@ def calculate_disparity_map(img1, img2):
 
     
     #Sub-Pixel Disparity
-    epsilon = 1e-5  # Smoothing term to prevent division by zero
+    limit = 1e-5  # Smoothing term to prevent division by zero
     max_subpixel_correction = 0.5
 
-
-    
     for y in range(h):
         for x in range(w):
             d = disparity_map[y, x]
@@ -249,16 +252,13 @@ def calculate_disparity_map(img1, img2):
             denominator = 2*(C2 + C0 - 2*C1)
             
             # Check if the denominator is too small or zero
-            if np.abs(denominator) < epsilon:
+            if np.abs(denominator) < limit:
                 continue
-
-            # Compute subpixel correction
             subpixel_correction = (C2 - C0) / denominator
-
-            # Limit the range of subpixel correction
             subpixel_correction = np.clip(subpixel_correction, -max_subpixel_correction, max_subpixel_correction)
 
             disparity_map[y, x] = d + subpixel_correction
+    
     return disparity_map
 
 
