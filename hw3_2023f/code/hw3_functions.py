@@ -148,7 +148,7 @@ def rectify_stereo_images(img1, img2, h1, h2):
     
     dst1 = cv2.perspectiveTransform(pts, h1)
     dst2 = cv2.perspectiveTransform(pts, h2)
-    # Calculate the bounding box dimensions
+    
     x_min1, y_min1 = np.int32(dst1.min(axis=0))[0]
     x_max1, y_max1 = np.int32(dst1.max(axis=0))[0]
     x_min2, y_min2 = np.int32(dst2.min(axis=0))[0]
@@ -161,8 +161,8 @@ def rectify_stereo_images(img1, img2, h1, h2):
 
     # Create new translation matrices based on the maximum bounding box
     T1 = np.array([[1, 0, -x_min + 50],
-               [0, 1, -y_min + 50],
-               [0, 0, 1]])
+                [0, 1, -y_min + 50],
+                [0, 0, 1]])
     T2 = np.array([[1, 0, -x_min + 50],
                 [0, 1, -y_min + 50],
                 [0, 0, 1]])

@@ -170,9 +170,6 @@ def bayer_to_rgb_bilinear(bayer_img):
     return rgb_img
     \end{lstlisting}
 
-
-\section*{Interesting Implementation Detail}
-
 I'll explain my code step by step. 
 
 
@@ -242,10 +239,10 @@ def calculate_fundamental_matrix(pts1, pts2):
     Matrix $A$ is constructed using the normalized points. I just simply put each values in the matrix, and the values come from what we learned in class and supplementary slides.
     
     \item \textbf{Singular Value Decomposition and Reshaping f}
-    Performed singular value decomposition for matrix $A$, to obtain $f$.Since $f$ corresponds to the eigenvector of $A^TA$ with the smallest eigenvalue, I extracted the last row of $Vt$. Then, reshaped it into 3x3 matrix. Matrix $F$ is 3x3 fundmental matrix obtained from SVD.
+    Performed singular value decomposition for matrix $A$, to obtain $f$.Since $f$ corresponds to the eigenvector of $A^{T}A$ with the smallest eigenvalue, I extracted the last row of $Vt$. Then, reshaped it into 3{x}3 matrix. Matrix $F$ is 3{x}3 fundmental matrix obtained from SVD.
     
     \item \textbf{Enforce F to have Rank 2, and Recalculate F}
-    Performed singular value decomposition again for matrix $F$. To enforce rank 2 condition, I set the last row of S(minimum sigular value) zero and recalculated $F$ with new S.
+    Performed singular value decomposition again for matrix $F$. To enforce rank 2 condition, I set the last row of S (minimum sigular value) zero and recalculated $F$ with new S.
     
     \item \textbf{Denormalization}
     Finally, I denormalized fundamental matrix $F$ with scaling matrix $T1$ and $T2$ to bring it back to the scale of the original points.
@@ -302,13 +299,15 @@ def rectify_stereo_images(img1, img2, h1, h2):
     \item Next, I changed the homography matrices to avoid cropping. To implement this, I transformed the corner points first and set the edge of rectified images with the boundary. Details are explained below.
     \item \textbf{Defining Corner Points} First, I defined the corner points of the imgae in $pts$. After calculating new homography, the points are translated to new point with it to obtain the boundary of rectified image.
     
-    \item \textbf{Calculate Transformed Points} The corner points are transformed using the original homography matrices $H$ and $H'$ for both images. I used $cv2.perspectiveTransform()$ with corner points and homography matrix, to apply transform in the corner points.
+    \item \textbf{Calculate Transformed Points} The corner points are transformed using the original homography matrices $H$ and $H'$ for both images. 
+    
+    I used $cv2.perspectiveTransform()$ with corner points and homography matrix, to apply transform in the corner points.
 
     \item \textbf{Bounding Box Calculation} I obtained the coordinates of two bounding boxes from each images by choosing the minimum and maximum values among the corner point coordinates transformed by $cv2.perspectiveTransform()$. Since the result of transform is float value, I rounded them to integer by $np.int32$, and made into 1-dimensional array.
     \item Furthermore, I chose the minimum and maximum value among two boundaries of each images, to set the translation matrix with respect of bigger value. I did this because we should use box that could contain both images, thus we should use the bigger box to not crop the image.
     \item \textbf{Translation Matrices} By the coordinate of boundaries obtained in previous step, I constructed the translation matrices. I added margin of 50 pixels around the images, to make it not tightly stick to the edge and look like what in the supplementary slides.
     \item \textbf{Modified Homographies} The original homography matrices are modified using the translation matrices, and obtained two new homography matrices.
-    \item \textbf{Warp Image} Finally, I applied $cv2.warpPerspective()$ to warp the images using the modified homography matrices and obtain the rectified images. Value $new\_size$ is the size of final image after warp, which contains margin of 50 pixels for four directions around the image. The result could be seen in \ref*{result1}
+    \item \textbf{Warp Image} Finally, I applied $cv2.warpPerspective()$ to warp the images using the modified homography matrices and obtain the rectified images. Value $new\_size$ is the size of final image after warp, which contains margin of 50 pixels for four directions around the image. The result is below.
     
 \end{enumerate}
 \begin{figure}[h]
@@ -318,21 +317,31 @@ def rectify_stereo_images(img1, img2, h1, h2):
     \label{fig:result1}
 \end{figure}
 The fundamental matrices obtained from each function is like this.
-$$ \left[
+\[\left[
 \begin{matrix}
     1.13843181e-21 & -3.30364530e-16 & -1.02724445e-15\\
     2.56400517e-18 & -4.61081404e-17 & 9.19265708e-01\\
     9.69843866e-17 & -9.19265708e-01 & 4.87118170e-14
 \end{matrix}
-\right] $$
-$$ \left[
+\right] \]
+\[\left[
 \begin{matrix}
     8.24589712-22 & -3.30459784e-16 & 3.03620926e-14\\
     2.49922896e-18 & -4.61042020e-17 & 9.19265708e-01\\
     -1.37016042e-16 & -9.19265708e-01 & -3.16691741e-12\\
 \end{matrix}
-\right] $$
-\section*{Checking Epipolar Constraint}
+\right]\]
+If matrix $F$ is a fundamental matrix related to two recified images, it should satisfy the constraint
+\[\left[
+    \begin{matrix}
+        0 & 0 & 0\\
+        0 & 0 & T\\
+        0 & -T & 0\\
+    \end{matrix}
+\right]\]
+If we check for the new fundamental matrix of non-cropped recified image that i implemented, seven values are almost zero, and we could find out
+two values $9.19265708e-01$ and $-9.19265708e-01$ satisfies the constraint given above.
+
 \section*{Calculating Disparity Map}
 The final, and the most complex part of this project is cacluating the disparity map.
 \begin{lstlisting}[language=python]
@@ -390,7 +399,9 @@ def calculate_disparity_map(img1, img2):
     \item \textbf{Calculating NCC, part 1} For all disparity $d$, for each window, I calculated NCC. First I shifted $img2$ by $d$ with $np.roll()$. The reason I used this function is for computational efficiency (vectorized calculation) and for edge constraints. 
     Then I calculated the mean of each window in $img1$ and $img2$. For the window size i used total width of the image and and the height of the window for each y coordinate. This is explained in more detail below.
     \item \textbf{Calculating NCC, part 2} Then i calculated the numerator and denominator of NCC with respect to the NCC equation. To get rid of the case if denominator is zero, I set the ncc value -1 in that case. Finally, I put cacluated NCC cost in the $cost\_volume$ matrix for all y coordinates of image.
-    \item \textbf{Cost Aggregation} For cost aggregation, I used guided filter. The original box filter version is explained in the bottomost part of the report. $cv2.ximgproc.createGuidedFilter()$ creates a guided filter with given image, and parameters of window size $radius$ and regularization term $epsilon$. I first created the guided filter with reference image $img1$, and then applied it to each layers of the cost volume traversing through disparities.
+    \item \textbf{Cost Aggregation} For cost aggregation, I used guided filter. The original box filter version is explained in the bottomost part of the report. 
+    
+    $cv2.ximgproc.createGuidedFilter()$ creates a guided filter with given image, and parameters of window size $radius$ and regularization term $epsilon$. I first created the guided filter with reference image $img1$, and then applied it to each layers of the cost volume traversing through disparities.
     \item \textbf{Get Disparity Map} Finally, I obtained the disparity map by choosing the disparity of pixels with minimum cost. I used $np.argmin()$ along the disparity axis of the cost volume. The reason why I made the value negative is because when I didn't, the result disparity map showed just an opposite result from the answer in slides. The deep area had blue color, and shallow area had red color. When I put minus on the value, bad pixel error decreased tremendously. I was unable to figure out why this happen, so I had to just choose the way with lower error. 
 \end{enumerate}
 
@@ -518,6 +529,11 @@ for d in range(DISPARITY_RANGE):
     cost_volume[:,:,d] = cv2.boxFilter(cost_volume[:,:,d], ddepth=-1, ksize=(30, 30))
 \end{lstlisting}
 The error seem decreased in big size filters, so I used filter size of 30.
+\begin{figure}
+    \centering
+    \includegraphics*[width=7cm]{../result/disparity_map_box.png}
+    \caption{Disparity Map Calculated with Box Filter}
+\end{figure}
 \section*{Machine Information}
 All the results were calculated in M2 Pro Macbook, with 16GB RAM.
 \end{document}
